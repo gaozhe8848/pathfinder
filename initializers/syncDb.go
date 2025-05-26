@@ -1,7 +1,11 @@
 package initializers
 
-import "pathfinder/models"
+import (
+	"pathfinder/models"
 
-func SyncDb() {
-	DB.AutoMigrate(&models.User{})
+	"gorm.io/gorm"
+)
+
+func SyncDb(db *gorm.DB) {
+	db.AutoMigrate(&models.User{})
 }

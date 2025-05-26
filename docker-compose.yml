@@ -1,12 +1,49 @@
-version: "1"
+version: '3.8'
+
 services:
-  mysql:
-    image: mysql:8.3.0
-    container_name: pathfinder-mysql
+  app: # Your Go application service, using a pre-built image
+    image: pathfinder # Tells Docker Compose to use the image tagged 'pathfinder'
     ports:
-      - "3306:3306"
+      - "8080:8080" # Or whatever port your Gin app runs on
     environment:
-      MYSQL_ROOT_PASSWORD: mysql
+      - GIN_MODE=debug # Or debug
+      - DB_HOST=postgres_db # Crucial: This is the service name of your PostgreSQL container
+      - DB_USER=pg
+      - DB_PASSWORD=pwd
+      - DB_NAME=pathfinder
+      - DB_PORT=5432
+      - DB_SSLMODE=disable
+      - DB_TIMEZONE=UTC
+      - SECRET=ashsjkdeingskshgisk # For your middleware/requireAuth.go
+    depends_on:
+      postgres_db:
+        condition: service_healthy # Wait for postgres_db to be healthy
+    # env_file: # Example if you were to use an .env file
+    #   - .env # Loads environment variables from a .env file
+    networks:
+      pathfinder_network:
+  
+
+  postgres_db: # Your PostgreSQL service
+    image: postgres:15 # Or your preferred version
+    ports:
+      - "5433:5432" # Expose PostgreSQL on host port 5433 to avoid conflict if you have local PG on 5432
+    environment:
+      - POSTGRES_USER=pg
+      - POSTGRES_PASSWORD=pwd
+      - POSTGRES_DB=pathfinder
     volumes:
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./docker/mysql/data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data # Persist data
+    healthcheck:
+      # pg_isready is a utility to check PostgreSQL server status
+      test: ["CMD-SHELL", "pg_isready -U pg -d pathfinder -h localhost"]
+      interval: 5s  # How often to run the check
+      timeout: 5s   # How long to wait for the check to return
+      retries: 5    # How many times to retry before marking as unhealthy
+    networks:
+      pathfinder_network:
+volumes:
+  postgres_data:
+networks:
+  pathfinder_network:
+    driver: bridge
