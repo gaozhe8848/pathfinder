@@ -4,9 +4,10 @@ services:
   app: # Your Go application service, using a pre-built image
     image: pathfinder # Tells Docker Compose to use the image tagged 'pathfinder'
     ports:
-      - "8080:8080" # Or whatever port your Gin app runs on
+      - "8081:8081" # Or whatever port your Gin app runs on
     environment:
       - GIN_MODE=debug # Or debug
+      - PORT=8081
       - DB_HOST=postgres_db # Crucial: This is the service name of your PostgreSQL container
       - DB_USER=pg
       - DB_PASSWORD=pwd
